@@ -50,6 +50,7 @@ public class UserServiceTest {
     public void testLogin(){
         when(userRepository.existsUserByEmail(buildLoginDto().getEmail())).thenReturn(true);
         when(userRepository.findByEmail(buildLoginDto().getEmail())).thenReturn(User.builder().password("password").build());
+        when(encoder.matches("password","password")).thenReturn(true);
         String response = service.login(buildLoginDto());
         assertNotNull(response);
         assertEquals("login successful",response);

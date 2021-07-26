@@ -9,6 +9,7 @@ import java.time.LocalTime;
 @Builder
 @Data
 public class SearchResponseDto {
+    private String busName;
     private String source;
     private String destination;
     private LocalTime startingTime;

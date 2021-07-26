@@ -69,7 +69,7 @@ public class UserService implements UserDetailsService {
     }
     public String login(LoginDto dto) {
         User user = getUserByEmail(dto.getEmail());
-        if (user.getPassword().equals(dto.getPassword()))
+        if (bcryptEncoder.matches(dto.getPassword(), user.getPassword()))
             return "login successful";
         else {
             log.info("Authentication failed");

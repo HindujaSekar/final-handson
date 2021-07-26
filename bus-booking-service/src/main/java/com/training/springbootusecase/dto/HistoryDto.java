@@ -18,5 +18,5 @@ public class HistoryDto {
     private JourneyStatus journeyStatus;
     private int noOfSeats;
     private String busName;
-    private String passengerDetails;
+    private String userDetails;
 }

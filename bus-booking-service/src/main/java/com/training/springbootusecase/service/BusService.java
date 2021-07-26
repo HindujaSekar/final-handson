@@ -8,6 +8,7 @@ import com.training.springbootusecase.dto.SearchResponseDto;
 import com.training.springbootusecase.dto.TicketDto;
 import com.training.springbootusecase.entity.BusDetails;
 import com.training.springbootusecase.entity.JourneyStatus;
+import com.training.springbootusecase.entity.PassengerDetails;
 import com.training.springbootusecase.entity.PaymentStatus;
 import com.training.springbootusecase.entity.Ticket;
 import com.training.springbootusecase.entity.TravelHistory;
@@ -17,6 +18,7 @@ import com.training.springbootusecase.exceptions.NoArgumentException;
 import com.training.springbootusecase.exceptions.TicketNotFoundException;
 import com.training.springbootusecase.exceptions.TransactionFailedException;
 import com.training.springbootusecase.repository.BusDetailsRepository;
+import com.training.springbootusecase.repository.PassengerDetailsRepository;
 import com.training.springbootusecase.repository.TicketRepository;
 import com.training.springbootusecase.repository.TravelHistoryRepository;
 import com.training.springbootusecase.repository.UserRepository;
@@ -41,6 +43,8 @@ public class BusService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private PassengerDetailsRepository passengerDetailsRepository;
+    @Autowired
     private FundTransferInterface fundTransferInterface;
     private static final String MESSAGE = "Please give required information";
 
@@ -56,6 +60,7 @@ public class BusService {
         List<SearchResponseDto> searchResponseDtos = new ArrayList<>();
         for (BusDetails details : busDetails) {
             searchResponseDtos.add(SearchResponseDto.builder()
+                    .busName(details.getBusName())
                     .busType(details.getBusType())
                     .customerReview(details.getCustomerReview())
                     .destination(details.getDestination())
@@ -81,20 +86,26 @@ public class BusService {
             throw new BusNotFoundException("No bus with this name found. Please give correct name");
         BusDetails details = busDetails.get(0);
         long fromAccountId = fundTransferInterface.findAccountByUserEmail(email).getBody();
-        String message = fundTransferInterface.fundTransfer(fromAccountId, 4L,
+        String message = fundTransferInterface.fundTransfer(fromAccountId, 6L,
                 details.getTicketPrice() * bookBusDto.getNoOfSeats()).getBody();
         if (message.equals("transaction successful")) {
             details.setNoOfAvailableSeats(details.getNoOfAvailableSeats() - bookBusDto.getNoOfSeats());
             busDetailsRepository.save(details);
             User user = userRepository.findByEmail(email);
             Ticket ticket = Ticket.builder()
-                    .passengerDetails(user)
+                    .userDetails(user)
                     .noOfTicketsUnderUser(bookBusDto.getNoOfSeats())
                     .startingPlace(details.getSource())
                     .destination(details.getDestination())
                     .fee(bookBusDto.getNoOfSeats() * details.getTicketPrice())
                     .travelDate(LocalDate.now()).build();
             ticketRepository.save(ticket);
+            for (int i = 0; i < bookBusDto.getNoOfSeats(); i++) {
+                passengerDetailsRepository.save(PassengerDetails.builder()
+                        .name(bookBusDto.getPassengerDetails().get(i).getName())
+                        .age(bookBusDto.getPassengerDetails().get(i).getAge())
+                        .ticket(ticket).build());
+            }
             TravelHistory travelHistory = TravelHistory.builder()
                     .busDetails(details)
                     .startingPlace(details.getSource())
@@ -109,7 +120,7 @@ public class BusService {
             List<TicketDto> ticketDtos = new ArrayList<>();
             for (int i = 0; i < bookBusDto.getNoOfSeats(); i++) {
                 ticketDtos.add(TicketDto.builder()
-                        .passengerDetails(bookBusDto.getPassengerDetails().get(i).getName())
+                        .passengerDetails(passengerDetailsRepository.findAllByTicket(ticket))
                         .startingPlace(details.getSource())
                         .destination(details.getDestination())
                         .fee(details.getTicketPrice())
@@ -125,15 +136,17 @@ public class BusService {
         if (fromDate == null || toDate == null || email.isEmpty())
             throw new NoArgumentException(MESSAGE);
         List<Ticket> tickets = ticketRepository.findByTravelDateBetween(fromDate, toDate).stream()
-                .filter(ticket -> ticket.getPassengerDetails().getEmail().equals(email))
+                .filter(ticket -> ticket.getUserDetails().getEmail().equals(email))
                 .collect(Collectors.toList());
-        if(tickets.isEmpty())
+        if (tickets.isEmpty())
             throw new TicketNotFoundException("No tickets found between these dates");
         log.info("Got all tickets between " + fromDate + " and " + toDate);
+
         List<TicketDto> ticketDtos = new ArrayList<>();
         for (Ticket ticket : tickets) {
+            List<PassengerDetails> passengerDetails = passengerDetailsRepository.findAllByTicket(ticket);
             ticketDtos.add(TicketDto.builder()
-                    .passengerDetails(ticket.getPassengerDetails().getFirstName())
+                    .passengerDetails(passengerDetails)
                     .startingPlace(ticket.getStartingPlace())
                     .destination(ticket.getDestination())
                     .travelDate(ticket.getTravelDate())
@@ -148,7 +161,7 @@ public class BusService {
         List<TravelHistory> travelHistories = travelHistoryRepository.findByTravelDateBetween(fromDate, toDate)
                 .stream().filter(travelHistory -> travelHistory.getUser().getEmail().equals(email))
                 .collect(Collectors.toList());
-        if(travelHistories.isEmpty())
+        if (travelHistories.isEmpty())
             throw new TicketNotFoundException("No history found between these dates");
         log.info("Got all travel history between " + fromDate + " and " + toDate);
         List<HistoryDto> historyDtos = new ArrayList<>();
@@ -160,7 +173,7 @@ public class BusService {
                     .busName(travelHistory.getBusDetails().getBusName())
                     .journeyStatus(travelHistory.getJourneyStatus())
                     .noOfSeats(travelHistory.getNoOfSeats())
-                    .passengerDetails(travelHistory.getUser().getFirstName())
+                    .userDetails(travelHistory.getUser().getFirstName())
                     .travelDate(travelHistory.getTravelDate())
                     .paymentStatus(travelHistory.getPaymentStatus()).build());
         }

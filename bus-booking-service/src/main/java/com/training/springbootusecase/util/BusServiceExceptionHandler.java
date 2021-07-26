@@ -47,7 +47,7 @@ public class BusServiceExceptionHandler extends ResponseEntityExceptionHandler {
                 .build(), HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(TicketNotFoundException.class)
-    protected ResponseEntity<ErrorDto> handleWhileTicketsNotFound(NoSuchUserException e){
+    protected ResponseEntity<ErrorDto> handleWhileTicketsNotFound(TicketNotFoundException e){
 
         return new ResponseEntity<>(ErrorDto
                 .builder()

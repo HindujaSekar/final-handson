@@ -16,6 +16,7 @@ import com.training.springbootusecase.exceptions.NoArgumentException;
 import com.training.springbootusecase.exceptions.TicketNotFoundException;
 import com.training.springbootusecase.exceptions.TransactionFailedException;
 import com.training.springbootusecase.repository.BusDetailsRepository;
+import com.training.springbootusecase.repository.PassengerDetailsRepository;
 import com.training.springbootusecase.repository.TicketRepository;
 import com.training.springbootusecase.repository.TravelHistoryRepository;
 import com.training.springbootusecase.repository.UserRepository;
@@ -52,6 +53,8 @@ public class BusServiceTest {
     private TicketRepository ticketRepository;
     @Mock
     private TravelHistoryRepository travelHistoryRepository;
+    @Mock
+    private PassengerDetailsRepository passengerDetailsRepository;
 
     @Test
     public void testSearchForBus() {
@@ -81,12 +84,21 @@ public class BusServiceTest {
         when(busDetailsRepository.findAll())
                 .thenReturn(buildBusDetails());
         when(fundTransferInterface.findAccountByUserEmail("email")).thenReturn(new ResponseEntity<>(1L, OK));
-        when(fundTransferInterface.fundTransfer(1L, 4L, 700))
+        when(fundTransferInterface.fundTransfer(1L, 6L,700))
                 .thenReturn(new ResponseEntity<>("transaction successful", OK));
         when(userRepository.findByEmail("email")).thenReturn(buildUser());
         List<TicketDto> response = service.bookSeats(buildBookBusDto(), "email");
         assertNotNull(response);
         assertEquals("Salem",response.get(0).getDestination());
+    }
+    @Test
+    public void testWhileBookSeatsHasFailedTransaction(){
+        when(busDetailsRepository.findAll())
+                .thenReturn(buildBusDetails());
+        when(fundTransferInterface.findAccountByUserEmail("email")).thenReturn(new ResponseEntity<>(1L, OK));
+        when(fundTransferInterface.fundTransfer(1L, 6L, 700))
+                .thenReturn(new ResponseEntity<>("transaction failed", OK));
+        assertThrows(TransactionFailedException.class,() ->service.bookSeats(buildBookBusDto(), "email"));
     }
     @Test
     public void testWhileBookSeatsHasEmptyArguments(){
@@ -99,15 +111,6 @@ public class BusServiceTest {
         when(busDetailsRepository.findAll())
                 .thenReturn(busDetails);
         assertThrows(BusNotFoundException.class,() ->service.bookSeats(buildBookBusDto(), "email"));
-    }
-    @Test
-    public void testWhileBookSeatsHasFailedTransaction(){
-        when(busDetailsRepository.findAll())
-                .thenReturn(buildBusDetails());
-        when(fundTransferInterface.findAccountByUserEmail("email")).thenReturn(new ResponseEntity<>(1L, OK));
-        when(fundTransferInterface.fundTransfer(1L, 4L, 700))
-                .thenReturn(new ResponseEntity<>("transaction failed", OK));
-        assertThrows(TransactionFailedException.class,() ->service.bookSeats(buildBookBusDto(), "email"));
     }
 
     @Test
@@ -154,7 +157,7 @@ public class BusServiceTest {
     private List<Ticket> buildTickets() {
         List<Ticket> tickets = new ArrayList<>();
         tickets.add(Ticket.builder()
-                .startingPlace("Bangalore").passengerDetails(User.builder().email("email").build()).build());
+                .startingPlace("Bangalore").userDetails(User.builder().email("email").build()).build());
         return tickets;
     }
 

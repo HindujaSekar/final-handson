@@ -20,7 +20,7 @@ public class Ticket {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long ticketId;
     @ManyToOne
-    private User passengerDetails;
+    private User userDetails;
     private int noOfTicketsUnderUser;
     private String startingPlace;
     private String destination;
@@ -29,10 +29,11 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(long ticketId, User passengerDetails, int noOfTicketsUnderUser,
-                  String startingPlace, String destination, double fee, LocalDate travelDate) {
+    public Ticket(long ticketId, User userDetails,
+                  int noOfTicketsUnderUser, String startingPlace, String destination, double fee,
+                  LocalDate travelDate) {
         this.ticketId = ticketId;
-        this.passengerDetails = passengerDetails;
+        this.userDetails = userDetails;
         this.noOfTicketsUnderUser = noOfTicketsUnderUser;
         this.startingPlace = startingPlace;
         this.destination = destination;
