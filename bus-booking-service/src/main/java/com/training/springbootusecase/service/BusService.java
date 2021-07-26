@@ -9,10 +9,7 @@ import com.training.springbootusecase.entity.PaymentStatus;
 import com.training.springbootusecase.entity.Ticket;
 import com.training.springbootusecase.entity.TravelHistory;
 import com.training.springbootusecase.entity.User;
-import com.training.springbootusecase.exceptions.BusNotFoundException;
-import com.training.springbootusecase.exceptions.NoArgumentException;
-import com.training.springbootusecase.exceptions.TicketNotFoundException;
-import com.training.springbootusecase.exceptions.TransactionFailedException;
+import com.training.springbootusecase.exceptions.*;
 import com.training.springbootusecase.repository.BusDetailsRepository;
 import com.training.springbootusecase.repository.PassengerDetailsRepository;
 import com.training.springbootusecase.repository.TicketRepository;
@@ -75,12 +72,16 @@ public class BusService {
         if (bookBusDto.getBusName().isEmpty() || bookBusDto.getPassengerDetails().isEmpty()
                 || bookBusDto.getNoOfSeats() == 0 || email.isEmpty())
             throw new NoArgumentException(MESSAGE);
+        if(bookBusDto.getNoOfSeats()!=bookBusDto.getPassengerDetails().size())
+            throw new PassengerSizeException("no of tickets and no of passengers are not equal");
         List<BusDetails> busDetails = busDetailsRepository.findAll().stream()
                 .filter(busDetails1 -> busDetails1.getBusName().equals(bookBusDto.getBusName()))
                 .collect(Collectors.toList());
         if (busDetails.isEmpty())
             throw new BusNotFoundException("No bus with this name found. Please give correct name");
         BusDetails details = busDetails.get(0);
+        if(details.getNoOfAvailableSeats()<bookBusDto.getNoOfSeats())
+            throw new NoSeatsAvailableException(details.getNoOfAvailableSeats() + " seats are available");
         long fromAccountId = fundTransferInterface.findAccountByUserEmail(email).getBody();
         String message = fundTransferInterface.fundTransfer(fromAccountId, 6L,
                 details.getTicketPrice() * bookBusDto.getNoOfSeats()).getBody();

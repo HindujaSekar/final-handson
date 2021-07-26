@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-@FeignClient(name = "http://FUND-TRANSFER-APPLICATION/fund-transfer", fallbackFactory = FundTransferInterfaceFallbackFactory.class)
+@FeignClient(name = "http://FUND-TRANSFER-APPLICATION/fund-transfer", fallback = FundTransferInterfaceFallback.class)
 public interface FundTransferInterface {
 
 	@PostMapping("/{fromAccountId}/{toAccountId}/{amount}")

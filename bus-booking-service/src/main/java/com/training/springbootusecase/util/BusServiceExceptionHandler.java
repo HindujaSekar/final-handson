@@ -1,15 +1,6 @@
 package com.training.springbootusecase.util;
 
-import com.training.springbootusecase.exceptions.AuthenticationException;
-import com.training.springbootusecase.exceptions.BusNotFoundException;
-import com.training.springbootusecase.exceptions.DuplicateUserException;
-import com.training.springbootusecase.exceptions.ErrorDto;
-import com.training.springbootusecase.exceptions.FieldErrorDto;
-import com.training.springbootusecase.exceptions.FundTransferDownException;
-import com.training.springbootusecase.exceptions.NoArgumentException;
-import com.training.springbootusecase.exceptions.NoSuchUserException;
-import com.training.springbootusecase.exceptions.TicketNotFoundException;
-import com.training.springbootusecase.exceptions.TransactionFailedException;
+import com.training.springbootusecase.exceptions.*;
 import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +36,33 @@ public class BusServiceExceptionHandler extends ResponseEntityExceptionHandler {
                 .errorCode(500)
                 .errorMessage(e.getMessage())
                 .build(), HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(NoSeatsAvailableException.class)
+    protected ResponseEntity<ErrorDto> handleWhileSeatNotAvailable(NoSeatsAvailableException e){
+
+        return new ResponseEntity<>(ErrorDto
+                .builder()
+                .errorCode(500)
+                .errorMessage(e.getMessage())
+                .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(PassengerSizeException.class)
+    protected ResponseEntity<ErrorDto> handleWhilePassengerSizeDiffers(PassengerSizeException e){
+
+        return new ResponseEntity<>(ErrorDto
+                .builder()
+                .errorCode(500)
+                .errorMessage(e.getMessage())
+                .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(ServiceDownException.class)
+    protected ResponseEntity<ErrorDto> handleWhileServiceIsDown(ServiceDownException e){
+
+        return new ResponseEntity<>(ErrorDto
+                .builder()
+                .errorCode(500)
+                .errorMessage(e.getMessage())
+                .build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(TicketNotFoundException.class)
     protected ResponseEntity<ErrorDto> handleWhileTicketsNotFound(TicketNotFoundException e){
