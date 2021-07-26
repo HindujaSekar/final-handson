@@ -10,13 +10,13 @@ import java.util.List;
 public class BookBusDto {
 
     private String busName;
-    private List<PassengerDetails> passengerDetails;
+    private List<PassengerDetailsDto> passengerDetails;
     private int noOfSeats;
 
     public BookBusDto() {
     }
 
-    public BookBusDto(String busName, List<PassengerDetails> passengerDetails, int noOfSeats) {
+    public BookBusDto(String busName, List<PassengerDetailsDto> passengerDetails, int noOfSeats) {
         this.busName = busName;
         this.passengerDetails = passengerDetails;
         this.noOfSeats = noOfSeats;

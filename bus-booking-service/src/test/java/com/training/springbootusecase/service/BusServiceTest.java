@@ -4,13 +4,10 @@ import com.training.springbootusecase.client.FundTransferInterface;
 import com.training.springbootusecase.dto.BookBusDto;
 import com.training.springbootusecase.dto.BusSearchDto;
 import com.training.springbootusecase.dto.HistoryDto;
-import com.training.springbootusecase.dto.PassengerDetails;
+import com.training.springbootusecase.dto.PassengerDetailsDto;
 import com.training.springbootusecase.dto.SearchResponseDto;
 import com.training.springbootusecase.dto.TicketDto;
-import com.training.springbootusecase.entity.BusDetails;
-import com.training.springbootusecase.entity.Ticket;
-import com.training.springbootusecase.entity.TravelHistory;
-import com.training.springbootusecase.entity.User;
+import com.training.springbootusecase.entity.*;
 import com.training.springbootusecase.exceptions.BusNotFoundException;
 import com.training.springbootusecase.exceptions.NoArgumentException;
 import com.training.springbootusecase.exceptions.TicketNotFoundException;
@@ -35,6 +32,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.OK;
 
@@ -87,10 +85,22 @@ public class BusServiceTest {
         when(fundTransferInterface.fundTransfer(1L, 6L,700))
                 .thenReturn(new ResponseEntity<>("transaction successful", OK));
         when(userRepository.findByEmail("email")).thenReturn(buildUser());
+        when(passengerDetailsRepository.findAllByTicket(any(Ticket.class)))
+                .thenReturn(buildPassengerDetails());
         List<TicketDto> response = service.bookSeats(buildBookBusDto(), "email");
         assertNotNull(response);
         assertEquals("Salem",response.get(0).getDestination());
     }
+
+    private List<PassengerDetails> buildPassengerDetails() {
+        List<PassengerDetails> passengerDetails = new ArrayList<>();
+        passengerDetails.add(PassengerDetails.builder()
+                .age(23)
+                .name("name")
+                .ticket(Ticket.builder().build()).build());
+        return passengerDetails;
+    }
+
     @Test
     public void testWhileBookSeatsHasFailedTransaction(){
         when(busDetailsRepository.findAll())
@@ -118,6 +128,8 @@ public class BusServiceTest {
 
         when(ticketRepository.findByTravelDateBetween(LocalDate.now(), LocalDate.now()))
                 .thenReturn(buildTickets());
+        when(passengerDetailsRepository.findAllByTicket(any(Ticket.class)))
+                .thenReturn(buildPassengerDetails());
         List<TicketDto> response = service.findTickets(LocalDate.now(), LocalDate.now(), "email");
         assertNotNull(response);
         assertEquals("Bangalore",response.get(0).getStartingPlace());
@@ -184,8 +196,8 @@ public class BusServiceTest {
     }
 
     private BookBusDto buildBookBusDto() {
-        List<PassengerDetails> passengerDetails = new ArrayList<>();
-        passengerDetails.add(PassengerDetails.builder()
+        List<PassengerDetailsDto> passengerDetails = new ArrayList<>();
+        passengerDetails.add(PassengerDetailsDto.builder()
                 .age(20).name("name").build());
         return BookBusDto.builder()
                 .busName("busName")

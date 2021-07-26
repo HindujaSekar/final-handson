@@ -1,11 +1,7 @@
 package com.training.springbootusecase.service;
 
 import com.training.springbootusecase.client.FundTransferInterface;
-import com.training.springbootusecase.dto.BookBusDto;
-import com.training.springbootusecase.dto.BusSearchDto;
-import com.training.springbootusecase.dto.HistoryDto;
-import com.training.springbootusecase.dto.SearchResponseDto;
-import com.training.springbootusecase.dto.TicketDto;
+import com.training.springbootusecase.dto.*;
 import com.training.springbootusecase.entity.BusDetails;
 import com.training.springbootusecase.entity.JourneyStatus;
 import com.training.springbootusecase.entity.PassengerDetails;
@@ -118,9 +114,12 @@ public class BusService {
                     .user(user).build();
             travelHistoryRepository.save(travelHistory);
             List<TicketDto> ticketDtos = new ArrayList<>();
+            List<PassengerDetails> passengerDetails = passengerDetailsRepository.findAllByTicket(ticket);
             for (int i = 0; i < bookBusDto.getNoOfSeats(); i++) {
                 ticketDtos.add(TicketDto.builder()
-                        .passengerDetails(passengerDetailsRepository.findAllByTicket(ticket))
+                        .passengerDetails(PassengerDetailsDto.builder()
+                                .name(passengerDetails.get(i).getName())
+                                .age(passengerDetails.get(i).getAge()).build())
                         .startingPlace(details.getSource())
                         .destination(details.getDestination())
                         .fee(details.getTicketPrice())
@@ -145,12 +144,16 @@ public class BusService {
         List<TicketDto> ticketDtos = new ArrayList<>();
         for (Ticket ticket : tickets) {
             List<PassengerDetails> passengerDetails = passengerDetailsRepository.findAllByTicket(ticket);
-            ticketDtos.add(TicketDto.builder()
-                    .passengerDetails(passengerDetails)
-                    .startingPlace(ticket.getStartingPlace())
-                    .destination(ticket.getDestination())
-                    .travelDate(ticket.getTravelDate())
-                    .fee(ticket.getFee()).build());
+            for(PassengerDetails passengerDetails1: passengerDetails) {
+                ticketDtos.add(TicketDto.builder()
+                        .passengerDetails(PassengerDetailsDto.builder()
+                                .age(passengerDetails1.getAge())
+                                .name(passengerDetails1.getName()).build())
+                        .startingPlace(ticket.getStartingPlace())
+                        .destination(ticket.getDestination())
+                        .travelDate(ticket.getTravelDate())
+                        .fee(ticket.getFee()).build());
+            }
         }
         return ticketDtos;
     }

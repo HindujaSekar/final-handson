@@ -26,7 +26,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDto> registerUser(RegisterUserDto registerUserDto){
+    public ResponseEntity<RegisterResponseDto> registerUser(@RequestBody RegisterUserDto registerUserDto){
         log.info("Register user - in progress");
         return new ResponseEntity<>(userService.registerUser(registerUserDto), CREATED);
     }
